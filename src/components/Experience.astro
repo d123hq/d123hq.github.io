@@ -1,0 +1,56 @@
+---
+import { site } from '../data/site';
+---
+
+<section id="experience" class="scroll-mt-24 reveal">
+  <h2 class="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-600 mb-5">Experience</h2>
+  <div class="space-y-6">
+    {site.experience.map(job => (
+      <div>
+        <div class="flex items-baseline justify-between gap-4 flex-wrap mb-0.5">
+          <div>
+            <p class="text-sm font-medium text-zinc-100">{job.role}</p>
+            <p class="text-xs text-violet-400 mt-0.5">{job.company}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="font-mono text-[11px] text-zinc-500">{job.period}</p>
+            {job.location && <p class="font-mono text-[11px] text-zinc-700">{job.location}</p>}
+          </div>
+        </div>
+        <ul class="mt-3 space-y-1.5">
+          {job.bullets.map(b => (
+            <li class="flex gap-2.5 text-xs text-zinc-400 leading-relaxed">
+              <span class="text-zinc-700 mt-1 shrink-0">—</span>
+              {b}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section id="education" class="scroll-mt-24 reveal">
+  <h2 class="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-600 mb-5 mt-12">Education</h2>
+  <div class="space-y-6">
+    {site.education.map(ed => (
+      <div>
+        <div class="flex items-baseline justify-between gap-4 flex-wrap mb-0.5">
+          <div>
+            <p class="text-sm font-medium text-zinc-100">{ed.degree}</p>
+            <p class="text-xs text-violet-400 mt-0.5">{ed.school}</p>
+          </div>
+          <p class="font-mono text-[11px] text-zinc-500 shrink-0">{ed.period}</p>
+        </div>
+        <ul class="mt-3 space-y-1.5">
+          {ed.notes.map(n => (
+            <li class="flex gap-2.5 text-xs text-zinc-400 leading-relaxed">
+              <span class="text-zinc-700 mt-1 shrink-0">—</span>
+              {n}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</section>

@@ -1,0 +1,23 @@
+---
+import { site } from '../data/site';
+---
+
+<section id="skills" class="scroll-mt-24 reveal">
+  <h2 class="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-600 mb-5">Skills</h2>
+  <div class="space-y-4">
+    {site.skills.map(cat => (
+      <div class="flex gap-3 text-sm">
+        <span class="font-mono text-[11px] text-zinc-500 w-36 shrink-0 pt-0.5 leading-relaxed">
+          {cat.label}
+        </span>
+        <div class="flex flex-wrap gap-1.5">
+          {cat.items.map(item => (
+            <span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-300 text-xs">
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>

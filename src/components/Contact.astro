@@ -1,0 +1,38 @@
+---
+import { site } from '../data/site';
+const year = new Date().getFullYear();
+---
+
+<section id="contact" class="scroll-mt-24 reveal">
+  <h2 class="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-600 mb-5">Contact</h2>
+  <p class="text-zinc-400 text-sm leading-relaxed mb-5 max-w-md">
+    {site.contactText}
+  </p>
+  {site.social.email && (
+    <a href={`mailto:${site.social.email}`}
+       class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors">
+      Get in touch
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  )}
+  <div class="flex gap-4 mt-6 flex-wrap items-center">
+    {site.social.github && (
+      <a href={site.social.github} target="_blank" rel="noopener"
+         class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">GitHub</a>
+    )}
+    {site.social.linkedin && (
+      <a href={site.social.linkedin} target="_blank" rel="noopener"
+         class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">LinkedIn</a>
+    )}
+    {site.social.kaggle && (
+      <a href={site.social.kaggle} target="_blank" rel="noopener"
+         class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">Kaggle</a>
+    )}
+  </div>
+</section>
+
+<footer class="mt-20 py-7 border-t border-zinc-800/50">
+  <p class="font-mono text-[11px] text-zinc-700">{site.name} · {year}</p>
+</footer>

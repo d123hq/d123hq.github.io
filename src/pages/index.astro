@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Skills from '../components/Skills.astro';
+import Projects from '../components/Projects.astro';
+import Experience from '../components/Experience.astro';
+import Contact from '../components/Contact.astro';
+import { site } from '../data/site';
+---
+
+<Base title={`${site.name} | ${site.role}`} description={site.tagline}>
+  <Nav />
+  <main class="lg:pl-56">
+    <Hero />
+    <div class="px-6 lg:px-14 pb-24 max-w-2xl space-y-20">
+      <About />
+      <Skills />
+      <Projects />
+      <Experience />
+      <Contact />
+    </div>
+  </main>
+</Base>

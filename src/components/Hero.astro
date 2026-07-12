@@ -1,0 +1,54 @@
+---
+import { site } from '../data/site';
+const phrases = site.typingPhrases;
+---
+
+<section id="hero" class="min-h-screen flex items-center px-6 lg:px-14 pt-14 lg:pt-0">
+  <div class="max-w-lg">
+    {site.available && (
+      <div class="mb-5">
+        <span class="inline-flex items-center gap-2 font-mono text-xs px-2.5 py-1 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse block"></span>
+          Available for hire
+        </span>
+      </div>
+    )}
+
+    <h1 class="text-4xl lg:text-5xl font-bold tracking-tight leading-tight mb-2">
+      {site.name}
+    </h1>
+
+    <div class="flex items-center gap-0.5 h-7 mb-5">
+      <span id="typing-text" class="text-zinc-400 font-mono text-sm"></span>
+      <span class="cursor text-violet-400 font-mono text-sm">|</span>
+    </div>
+
+    <p class="text-zinc-400 text-sm leading-relaxed mb-7 max-w-md">
+      {site.tagline}
+    </p>
+
+    <div class="flex gap-3 flex-wrap">
+      <a href="#projects"
+         class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors">
+        View Projects
+      </a>
+      <a href="/resume.pdf" download
+         class="px-4 py-2 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white text-sm font-medium rounded-lg transition-colors">
+        Download CV
+      </a>
+    </div>
+  </div>
+</section>
+
+<script define:vars={{ phrases }}>
+  const el = document.getElementById('typing-text');
+  let pi = 0, ci = 0, deleting = false;
+  function tick() {
+    const phrase = phrases[pi];
+    el.textContent = deleting ? phrase.slice(0, --ci) : phrase.slice(0, ++ci);
+    if (!deleting && ci === phrase.length) { deleting = true; setTimeout(tick, 1800); return; }
+    if (deleting && ci === 0)             { deleting = false; pi = (pi + 1) % phrases.length; }
+    setTimeout(tick, deleting ? 55 : 95);
+  }
+  tick();
+</script>

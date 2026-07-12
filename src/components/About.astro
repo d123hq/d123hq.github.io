@@ -1,0 +1,10 @@
+---
+import { site } from '../data/site';
+---
+
+<section id="about" class="scroll-mt-24 reveal">
+  <h2 class="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-600 mb-5">About</h2>
+  <div class="space-y-3 text-zinc-400 text-sm leading-relaxed">
+    {site.bio.map(para => <p>{para}</p>)}
+  </div>
+</section>
