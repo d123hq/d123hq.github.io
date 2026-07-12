@@ -28,6 +28,17 @@ const NAV = [
           >{label}</a>
         </li>
       ))}
+      <li class="pt-3 mt-2 border-t border-zinc-800/50">
+        <a
+          href="/blog"
+          class="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-violet-400 transition-colors py-1"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          Writing
+        </a>
+      </li>
     </ul>
   </nav>
 
@@ -83,6 +94,9 @@ const NAV = [
       {NAV.map(({ label, href }) => (
         <li><a href={href} class="mb-link block py-2 text-sm text-zinc-300 hover:text-white transition-colors">{label}</a></li>
       ))}
+      <li class="border-t border-zinc-800/50 mt-1 pt-1">
+        <a href="/blog" class="block py-2 text-sm text-zinc-500 hover:text-violet-400 transition-colors">Writing</a>
+      </li>
     </ul>
   </nav>
 </header>
