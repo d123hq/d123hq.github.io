@@ -1,0 +1,4 @@
+_preview/
+*.tmp
+.DS_Store
+Thumbs.db
