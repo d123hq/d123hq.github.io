@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://is_h.github.io/sitemap-index.xml

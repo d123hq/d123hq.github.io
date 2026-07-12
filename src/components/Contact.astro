@@ -26,6 +26,10 @@ const year = new Date().getFullYear();
       <a href={site.social.linkedin} target="_blank" rel="noopener"
          class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">LinkedIn</a>
     )}
+    {'x' in site.social && site.social.x && (
+      <a href={site.social.x} target="_blank" rel="noopener"
+         class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">X / Twitter</a>
+    )}
     {site.social.kaggle && (
       <a href={site.social.kaggle} target="_blank" rel="noopener"
          class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">Kaggle</a>

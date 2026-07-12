@@ -19,10 +19,12 @@ export const site = {
   tagline: 'I build machine learning systems that convert raw data into reliable decisions — from exploration to production.',
 
   // ── Social links (leave blank to hide) ────────────────────────
+  // Add your handles when ready — any blank field is hidden automatically
   social: {
     github:   'https://github.com/is_h',
-    linkedin: '',
-    email:    '',
+    linkedin: '',    // e.g. 'https://linkedin.com/in/yourhandle'
+    x:        '',    // e.g. 'https://x.com/yourhandle'
+    email:    '',    // e.g. 'you@example.com'
     kaggle:   '',
   },
 

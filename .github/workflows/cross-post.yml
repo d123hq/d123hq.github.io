@@ -1,0 +1,71 @@
+name: Cross-post to X & Medium
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/content/blog/**.md'
+  # Also allow manual trigger for a specific post
+  workflow_dispatch:
+    inputs:
+      post_path:
+        description: 'Path to post (e.g. src/content/blog/my-post.md)'
+        required: false
+        type: string
+
+jobs:
+  cross-post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # need previous commit to detect changes
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Find posts to cross-post
+        id: posts
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.post_path }}" ]; then
+            # Manual trigger — use provided path
+            echo "files=${{ inputs.post_path }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          FILES_TO_POST=""
+
+          # 1. Newly added files (A = Added)
+          ADDED=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- 'src/content/blog/*.md' 2>/dev/null || true)
+          for f in $ADDED; do
+            IS_DRAFT=$(grep -E '^draft:\s*true' "$f" | wc -l || echo 0)
+            [ "$IS_DRAFT" = "0" ] && FILES_TO_POST="$FILES_TO_POST $f"
+          done
+
+          # 2. Modified files where draft flipped from true → false
+          MODIFIED=$(git diff --name-only --diff-filter=M HEAD~1 HEAD -- 'src/content/blog/*.md' 2>/dev/null || true)
+          for f in $MODIFIED; do
+            WAS_DRAFT=$(git show HEAD~1:"$f" 2>/dev/null | grep -cE '^draft:\s*true' || echo 0)
+            NOW_DRAFT=$(grep -cE '^draft:\s*true' "$f" || echo 0)
+            [ "$WAS_DRAFT" = "1" ] && [ "$NOW_DRAFT" = "0" ] && FILES_TO_POST="$FILES_TO_POST $f"
+          done
+
+          FILES_TO_POST=$(echo "$FILES_TO_POST" | tr -s ' ' | sed 's/^ //;s/ $//')
+          echo "files=$FILES_TO_POST" >> $GITHUB_OUTPUT
+          echo "Detected: '$FILES_TO_POST'"
+
+      - name: Cross-post
+        if: steps.posts.outputs.files != ''
+        env:
+          SITE_URL:              https://is_h.github.io
+          TWITTER_API_KEY:       ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:    ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:  ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+          MEDIUM_TOKEN:          ${{ secrets.MEDIUM_TOKEN }}
+        run: node scripts/cross-post.mjs ${{ steps.posts.outputs.files }}
