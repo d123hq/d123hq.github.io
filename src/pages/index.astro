@@ -1,25 +1,37 @@
 ---
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Nav from '../components/Nav.astro';
-import Hero from '../components/Hero.astro';
-import About from '../components/About.astro';
-import Skills from '../components/Skills.astro';
-import Projects from '../components/Projects.astro';
-import Experience from '../components/Experience.astro';
-import Contact from '../components/Contact.astro';
+import BlogCard from '../components/BlogCard.astro';
 import { site } from '../data/site';
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const sorted = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
-<Base title={`${site.name} | ${site.role}`} description={site.tagline}>
-  <Nav />
-  <main class="lg:pl-56">
-    <Hero />
-    <div class="px-6 lg:px-14 pb-24 max-w-2xl space-y-20">
-      <About />
-      <Skills />
-      <Projects />
-      <Experience />
-      <Contact />
+<Base title={`${site.name} — Writing`} description="Writing on data science, machine learning, and AI engineering.">
+  <header class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800/50">
+    <div class="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
+      <span class="font-mono text-sm text-white font-medium">{site.name}</span>
+      <a href="/about" class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">About →</a>
     </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-6 py-16">
+    <div class="mb-10">
+      <h1 class="text-2xl font-bold tracking-tight text-zinc-100 mb-2">Writing</h1>
+      <p class="text-zinc-500 text-sm">Notes on data science, ML engineering, and applied AI.</p>
+    </div>
+
+    {sorted.length === 0 ? (
+      <p class="text-zinc-600 text-sm">No posts yet.</p>
+    ) : (
+      <div class="space-y-3">
+        {sorted.map(post => <BlogCard post={post} />)}
+      </div>
+    )}
   </main>
+
+  <footer class="max-w-2xl mx-auto px-6 py-8 border-t border-zinc-800/50">
+    <p class="font-mono text-[11px] text-zinc-700">{site.name} · {new Date().getFullYear()}</p>
+  </footer>
 </Base>
