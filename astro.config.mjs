@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  site: 'https://d123hq.github.io',
+  site: 'https://is_h.github.io',
   integrations: [tailwind()],
   output: 'static',
 });

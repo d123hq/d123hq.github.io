@@ -20,7 +20,7 @@ export const site = {
 
   // ── Social links (leave blank to hide) ────────────────────────
   social: {
-    github:   'https://github.com/d123hq',
+    github:   'https://github.com/is_h',
     linkedin: '',
     email:    '',
     kaggle:   '',
