@@ -1,35 +1,56 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import BlogCard from '../components/BlogCard.astro';
+import FeedCard from '../components/FeedCard.astro';
+import type { FeedItem } from '../components/FeedCard.astro';
 import { site } from '../data/site';
+import { getNotebooks } from '../lib/notebooks';
 
-const posts = await getCollection('blog', ({ data }) => !data.draft);
-const sorted = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const [posts, notebooks] = await Promise.all([
+  getCollection('blog', ({ data }) => !data.draft),
+  getNotebooks(site.notebooksRepo),
+]);
+
+const feed: FeedItem[] = [
+  ...posts.map(p => ({
+    type:        'post'        as const,
+    title:       p.data.title,
+    description: p.data.description,
+    date:        p.data.date,
+    tags:        p.data.tags,
+    href:        `/blog/${p.slug}`,
+    wordCount:   p.body.split(/\s+/).length,
+  })),
+  ...notebooks.map(n => ({
+    type:        'notebook'    as const,
+    title:       n.title,
+    description: n.description,
+    date:        n.date,
+    tags:        n.tags,
+    href:        `/notebooks/${n.slug}`,
+  })),
+].sort((a, b) => b.date.getTime() - a.date.getTime());
 ---
 
 <Base title={`${site.name} — Writing`} description="Writing on data science, machine learning, and AI engineering.">
   <header class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800/50">
     <div class="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
       <span class="font-mono text-sm text-white font-medium">{site.name}</span>
-      <nav class="flex items-center gap-4">
-        <a href="/notebooks" class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">Notebooks</a>
-        <a href="/about" class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">About →</a>
-      </nav>
+      <a href="/about" class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">About →</a>
     </div>
   </header>
 
   <main class="max-w-2xl mx-auto px-6 py-16">
     <div class="mb-10">
       <h1 class="text-2xl font-bold tracking-tight text-zinc-100 mb-2">Writing</h1>
-      <p class="text-zinc-500 text-sm">Notes on data science, ML engineering, and applied AI.</p>
+      <p class="text-zinc-500 text-sm">Posts and notebooks on data science, ML engineering, and applied AI.</p>
     </div>
 
-    {sorted.length === 0 ? (
-      <p class="text-zinc-600 text-sm">No posts yet.</p>
+    {feed.length === 0 ? (
+      <p class="text-zinc-600 text-sm">Nothing published yet.</p>
     ) : (
       <div class="space-y-3">
-        {sorted.map(post => <BlogCard post={post} />)}
+        {feed.map(item => <FeedCard item={item} />)}
       </div>
     )}
   </main>

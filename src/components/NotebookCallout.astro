@@ -5,16 +5,18 @@ interface Props {
   description?: string;
 }
 
+import { site } from '../data/site';
+
 const {
   slug,
   title       = 'Companion notebook',
   description = 'Runnable implementations and benchmarks',
 } = Astro.props;
 
-const repo     = 'is_h/is_h.github.io';
-const branch   = 'main';
-const viewerUrl = `/notebooks/jupyter/${slug}`;
-const colabUrl  = `https://colab.research.google.com/github/${repo}/blob/${branch}/src/content/jupyter/${slug}.ipynb`;
+const { owner, repo, branch, path } = site.notebooksRepo;
+const filePath  = path ? `${path}/${slug}.ipynb` : `${slug}.ipynb`;
+const viewerUrl = `/notebooks/${slug}`;
+const colabUrl  = `https://colab.research.google.com/github/${owner}/${repo}/blob/${branch}/${filePath}`;
 ---
 
 <div class="not-prose my-7 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-500/25 bg-violet-500/[0.04] px-5 py-4">

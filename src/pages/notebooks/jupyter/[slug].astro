@@ -1,128 +1,15 @@
 ---
-import fs from 'node:fs';
-import path from 'node:path';
-import JupyterNotebook from '../../../layouts/JupyterNotebook.astro';
-import { site } from '../../../data/site';
-
-const JUPYTER_DIR = path.join(process.cwd(), 'src/content/jupyter');
-const REPO = 'is_h/is_h.github.io';
-const BRANCH = 'main';
-
 export async function getStaticPaths() {
-  const dir = path.join(process.cwd(), 'src/content/jupyter');
+  // Old /notebooks/jupyter/[slug] URLs — redirect to /notebooks/[slug]
+  const fs   = await import('node:fs');
+  const path = await import('node:path');
+  const dir  = path.join(process.cwd(), 'src/content/jupyter');
   if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter(f => f.endsWith('.ipynb'));
-  return files.map(file => ({ params: { slug: file.replace('.ipynb', '') } }));
+  const slugs = fs.readdirSync(dir)
+    .filter((f: string) => f.endsWith('.ipynb'))
+    .map((f: string) => f.replace('.ipynb', ''));
+  return slugs.map((slug: string) => ({ params: { slug } }));
 }
 
-const { slug } = Astro.params;
-const filePath = path.join(JUPYTER_DIR, `${slug}.ipynb`);
-const nb = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-const meta = nb.metadata ?? {};
-
-const title       = meta.title       ?? slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
-const description = meta.description ?? '';
-const date        = meta.date        ?? '';
-
-const colabUrl = `https://colab.research.google.com/github/${REPO}/blob/${BRANCH}/src/content/jupyter/${slug}.ipynb`;
-
-// --- Cell rendering helpers ---
-
-function joinSource(source: string | string[]): string {
-  return Array.isArray(source) ? source.join('') : source;
-}
-
-// Minimal markdown → HTML (handles headings, bold, italic, inline code, line breaks)
-function mdToHtml(md: string): string {
-  return md
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/^######\s+(.+)$/gm, '<h6 class="text-xs font-semibold text-zinc-300 mt-6 mb-2">$1</h6>')
-    .replace(/^#####\s+(.+)$/gm,  '<h5 class="text-xs font-semibold text-zinc-300 mt-6 mb-2">$1</h5>')
-    .replace(/^####\s+(.+)$/gm,   '<h4 class="text-sm font-semibold text-zinc-200 mt-6 mb-2">$1</h4>')
-    .replace(/^###\s+(.+)$/gm,    '<h3 class="text-base font-semibold text-zinc-100 mt-8 mb-3">$1</h3>')
-    .replace(/^##\s+(.+)$/gm,     '<h2 class="text-lg font-bold text-zinc-100 mt-10 mb-4">$1</h2>')
-    .replace(/^#\s+(.+)$/gm,      '<h1 class="text-xl font-bold text-zinc-100 mt-10 mb-4">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g,    '<strong class="text-zinc-200 font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g,        '<em class="text-zinc-300">$1</em>')
-    .replace(/`([^`]+)`/g,        '<code class="font-mono text-[13px] text-zinc-200 bg-zinc-800 px-1.5 py-0.5 rounded">$1</code>')
-    .replace(/^- (.+)$/gm,        '<li class="text-zinc-400 text-sm ml-4 list-disc">$1</li>')
-    .replace(/(<li[\s\S]+?<\/li>)(?!\s*<li)/g, '<ul class="space-y-1 my-3">$1</ul>')
-    .replace(/\n\n/g,             '<br class="my-2" />\n');
-}
-
-function renderOutputText(text: string | string[]): string {
-  const t = Array.isArray(text) ? text.join('') : text;
-  return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-interface Output {
-  output_type: string;
-  text?: string | string[];
-  data?: Record<string, string | string[]>;
-  ename?: string;
-  evalue?: string;
-  traceback?: string[];
-}
-
-function getOutputHtml(output: Output): string {
-  switch (output.output_type) {
-    case 'stream':
-      return `<pre class="text-[12px] font-mono text-zinc-400 leading-relaxed whitespace-pre-wrap">${renderOutputText(output.text ?? '')}</pre>`;
-    case 'execute_result':
-    case 'display_data': {
-      const data = output.data ?? {};
-      if (data['text/html']) {
-        return `<div class="text-sm text-zinc-400 overflow-x-auto">${joinSource(data['text/html'])}</div>`;
-      }
-      if (data['image/png']) {
-        return `<img src="data:image/png;base64,${joinSource(data['image/png'])}" class="max-w-full rounded" alt="output" />`;
-      }
-      if (data['text/plain']) {
-        return `<pre class="text-[12px] font-mono text-zinc-400 leading-relaxed whitespace-pre-wrap">${renderOutputText(data['text/plain'])}</pre>`;
-      }
-      return '';
-    }
-    case 'error': {
-      const tb = (output.traceback ?? [])
-        .map(l => l.replace(/\x1b\[[0-9;]*m/g, ''))
-        .join('\n');
-      return `<pre class="text-[12px] font-mono text-red-400 leading-relaxed whitespace-pre-wrap">${tb}</pre>`;
-    }
-    default:
-      return '';
-  }
-}
+return Astro.redirect(`/notebooks/${Astro.params.slug}`, 301);
 ---
-
-<JupyterNotebook title={title} description={description} date={date} colabUrl={colabUrl}>
-  <div class="space-y-6">
-    {nb.cells.map((cell: any) => {
-      const source = joinSource(cell.source ?? '');
-      if (cell.cell_type === 'markdown') {
-        return (
-          <div class="nb-markdown text-zinc-400 text-sm leading-relaxed space-y-2" set:html={mdToHtml(source)} />
-        );
-      }
-
-      if (cell.cell_type === 'code') {
-        const outputs: Output[] = cell.outputs ?? [];
-        return (
-          <div class="rounded-xl border border-zinc-800/60 overflow-hidden">
-            <div class="px-4 py-1.5 bg-zinc-900/80 border-b border-zinc-800/60 flex items-center gap-2">
-              <span class="font-mono text-[10px] text-zinc-700">In</span>
-            </div>
-            <pre class="p-4 overflow-x-auto text-[13px] font-mono text-zinc-300 leading-relaxed bg-zinc-900/30"><code>{source}</code></pre>
-            {outputs.length > 0 && (
-              <div class="border-t border-zinc-800/60 px-4 py-3 bg-zinc-950/40 space-y-2">
-                <span class="font-mono text-[10px] text-zinc-700 block mb-2">Out</span>
-                {outputs.map(o => <Fragment set:html={getOutputHtml(o)} />)}
-              </div>
-            )}
-          </div>
-        );
-      }
-
-      return null;
-    })}
-  </div>
-</JupyterNotebook>

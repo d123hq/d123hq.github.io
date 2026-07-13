@@ -1,0 +1,58 @@
+---
+export interface FeedItem {
+  type:        'post' | 'notebook';
+  title:       string;
+  description: string;
+  date:        Date;
+  tags:        string[];
+  href:        string;
+  wordCount?:  number;
+}
+
+interface Props { item: FeedItem }
+
+const { item } = Astro.props;
+
+const formattedDate = item.date.toLocaleDateString('en-GB', {
+  day: 'numeric', month: 'short', year: 'numeric',
+});
+
+const readingMin = item.wordCount
+  ? Math.max(1, Math.round(item.wordCount / 200))
+  : null;
+---
+
+<a
+  href={item.href}
+  class="group block p-5 rounded-xl border border-zinc-800/60 bg-zinc-900/30 hover:border-zinc-700 hover:bg-zinc-900/60 transition-all"
+>
+  <div class="flex flex-wrap gap-1.5 mb-3">
+    <span class={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+      item.type === 'notebook'
+        ? 'border-orange-900/60 text-orange-500/80'
+        : 'border-violet-900/60 text-violet-400/80'
+    }`}>
+      {item.type}
+    </span>
+    {item.tags.map(tag => (
+      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono border border-zinc-800 text-zinc-600">
+        {tag}
+      </span>
+    ))}
+  </div>
+
+  <h2 class="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors mb-2 leading-snug">
+    {item.title}
+  </h2>
+  <p class="text-xs text-zinc-500 leading-relaxed mb-4 line-clamp-2">{item.description}</p>
+
+  <div class="flex items-center gap-2 text-[11px] font-mono text-zinc-700">
+    <span>{formattedDate}</span>
+    {readingMin && (
+      <>
+        <span>·</span>
+        <span>{readingMin} min</span>
+      </>
+    )}
+  </div>
+</a>
