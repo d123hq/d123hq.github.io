@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
-  site: 'https://is_h.github.io',
+  site: 'https://isac-h.github.io',
   integrations: [tailwind(), sitemap(), mdx()],
   output: 'static',
   markdown: {

@@ -21,7 +21,7 @@ export const site = {
   // ── Social links (leave blank to hide) ────────────────────────
   // Add your handles when ready — any blank field is hidden automatically
   social: {
-    github:   'https://github.com/is_h',
+    github:   'https://github.com/isac-h',
     linkedin: '',    // e.g. 'https://linkedin.com/in/yourhandle'
     x:        '',    // e.g. 'https://x.com/yourhandle'
     email:    '',    // e.g. 'you@example.com'
@@ -135,8 +135,8 @@ export const site = {
   // .ipynb files are fetched from this GitHub repo at build time.
   // Point 'repo' at a dedicated notebooks repo if you prefer separation.
   notebooksRepo: {
-    owner:  'is_h',
-    repo:   'is_h.github.io',
+    owner:  'isac-h',
+    repo:   'isac-h.github.io',
     branch: 'main',
     path:   'src/content/jupyter',
   },
