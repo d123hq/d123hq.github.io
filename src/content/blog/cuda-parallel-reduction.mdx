@@ -1,0 +1,191 @@
+---
+title: "Parallel Reduction in CUDA: From Atomic Soup to Warp Shuffles"
+description: "Every GPU op you care about — loss, softmax, layer norm, gradient accumulation — bottoms out in a reduction. This post builds three kernels from scratch, shows why the obvious approach is 100× slower than it needs to be, and explains the hardware features that make the fast version fast."
+date: 2026-07-13
+tags: ["CUDA", "GPU", "C++", "performance", "ML systems"]
+draft: false
+---
+
+import NotebookCallout from '../../components/NotebookCallout.astro';
+
+Every GPU operation you care about bottoms out in the same primitive: *reduction* — collapsing a large array to a single number. `sum(losses)`, `max(logits)` for softmax, `mean(x²)` for RMS norm, `sum(grad)` for gradient all-reduce. If you do these badly, you leave throughput on the table regardless of how clever the surrounding kernel is.
+
+This post builds three reduction kernels from scratch in CUDA C, explains the hardware reason each one behaves the way it does, and compares their performance on a real GPU.
+
+<NotebookCallout
+  slug="cuda-parallel-reduction"
+  title="Companion notebook"
+  description="Numba CUDA implementations of all three kernels, benchmarked on a Colab T4 GPU."
+/>
+
+## The problem
+
+Sum N floats. On CPU this is a loop; one scalar addition per cycle, memory-bound past a few megabytes. On a GPU with thousands of threads the obvious move is to throw all of them at the problem simultaneously — but what that actually means is the interesting part.
+
+For the benchmarks below: `N = 2²⁰` (≈ 1 M floats, 4 MB), 256 threads per block, on an NVIDIA T4.
+
+---
+
+## Kernel 1 — Naive atomicAdd
+
+The first instinct: give each thread one element and have it add directly to the output.
+
+```cpp
+__global__ void reduce_naive(const float* __restrict__ arr,
+                              float*       __restrict__ result,
+                              int n) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < n)
+        atomicAdd(result, arr[idx]);
+}
+```
+
+Launch it with `(n + 255) / 256` blocks and 256 threads per block. Conceptually all threads run in parallel, so this should be fast — right?
+
+**Measured: ~85 ms.**  NumPy on CPU does the same sum in ~3 ms.
+
+The kernel is 28× *slower* than the single-threaded CPU version.
+
+### Why atomics serialize
+
+`atomicAdd` on global memory is implemented in hardware as a read-modify-write that prevents any other thread from touching the same address while it executes. With 1 M threads all pointing at `result[0]`, they don't run in parallel — they form a queue. The GPU serialises all 1 M additions through a single L2 cache line.
+
+The parallelism is completely fake. You have 2560 CUDA cores doing exactly one useful thing at a time.
+
+---
+
+## Kernel 2 — Tree reduction with shared memory
+
+The fix is to stop fighting over a single address. Instead, reduce *within each block* using on-chip shared memory, then issue exactly one atomic per block at the end.
+
+```cpp
+__global__ void reduce_tree(const float* __restrict__ arr,
+                             float* __restrict__ partial,
+                             int n) {
+    __shared__ float smem[256];
+
+    int tid = threadIdx.x;
+    int gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // Load — each thread fetches one element
+    smem[tid] = (gid < n) ? arr[gid] : 0.f;
+    __syncthreads();
+
+    // Reduce in log₂(256) = 8 rounds
+    for (int s = 128; s > 0; s >>= 1) {
+        if (tid < s)
+            smem[tid] += smem[tid + s];
+        __syncthreads();
+    }
+
+    // One atomic per block
+    if (tid == 0)
+        partial[blockIdx.x] = smem[0];
+}
+```
+
+Call this with `num_blocks = (n + 255) / 256` blocks. It writes `num_blocks` partial sums into `partial[]`. Sum those on CPU (or recurse for very large N).
+
+**Measured: ~0.5 ms.** A 170× improvement over the naive version, and 6× faster than CPU.
+
+### Why this is fast
+
+Shared memory sits on-chip next to each SM — access latency is ~5 ns vs ~200 ns for global memory. The 8-round tree only needs `__syncthreads()` 8 times, and only the thread 0 in each block ever touches global memory. With `n = 1 M` and 256-thread blocks there are 4096 blocks, so only 4096 global writes instead of 1 M.
+
+The memory access pattern during the tree rounds:
+
+```
+Round 1  (s=128): threads 0-127 read smem[0..127] + smem[128..255]
+Round 2  (s= 64): threads 0- 63 read smem[0.. 63] + smem[64..127]
+...
+Round 8  (s=  1): thread  0     reads smem[0] + smem[1]
+```
+
+Each round halves the active thread count and reads a contiguous range — exactly what shared memory is built for.
+
+---
+
+## Kernel 3 — Warp shuffles
+
+Shared memory is fast, but it's still a memory — you write to it, sync, then read back. CUDA's *warp shuffle* instructions bypass memory entirely: they copy a value from one thread's *register* directly into another thread's register, within the same 32-thread warp.
+
+```cpp
+__device__ __forceinline__ float warp_reduce(float v) {
+    // Each step halves the active "width" inside the warp
+    v += __shfl_down_sync(0xffffffff, v, 16);
+    v += __shfl_down_sync(0xffffffff, v, 8);
+    v += __shfl_down_sync(0xffffffff, v, 4);
+    v += __shfl_down_sync(0xffffffff, v, 2);
+    v += __shfl_down_sync(0xffffffff, v, 1);
+    return v;  // lane 0 holds the warp sum
+}
+
+__global__ void reduce_warp(const float* __restrict__ arr,
+                             float* __restrict__ partial,
+                             int n) {
+    __shared__ float smem[8];   // one slot per warp (256 / 32 = 8)
+
+    int tid     = threadIdx.x;
+    int gid     = blockIdx.x * blockDim.x + threadIdx.x;
+    int lane    = tid & 31;
+    int warp_id = tid >> 5;
+
+    float v = (gid < n) ? arr[gid] : 0.f;
+
+    // Step 1: reduce within each warp — no memory, no sync needed
+    v = warp_reduce(v);
+
+    // Step 2: warp lane 0 writes its result to shared memory
+    if (lane == 0) smem[warp_id] = v;
+    __syncthreads();
+
+    // Step 3: first warp reduces the 8 partial warp sums
+    if (warp_id == 0) {
+        v = (lane < (blockDim.x >> 5)) ? smem[lane] : 0.f;
+        v = warp_reduce(v);
+        if (lane == 0) partial[blockIdx.x] = v;
+    }
+}
+```
+
+**Measured: ~0.3 ms.** ~40% faster than the tree kernel, and the approach cuBLAS/cuDNN use internally.
+
+### What `__shfl_down_sync` actually does
+
+`__shfl_down_sync(mask, v, delta)` makes lane `i` receive the value that lane `i + delta` currently holds in register `v`. No write to memory, no cache lookup. The hardware routes the value directly through the warp's register file in a single instruction.
+
+The `0xffffffff` mask means all 32 lanes participate. After 5 shuffle steps the warp sum lands in lane 0's register without a single byte touching L1 or L2.
+
+One `__syncthreads()` is still needed between steps 2 and 3 to ensure all 8 warp lanes have committed to `smem` before the first warp reads them. But that's one sync per block, not one per round.
+
+---
+
+## Benchmark summary
+
+| Kernel | Time (N = 2²⁰, T4) | Speedup vs naive |
+|---|---|---|
+| NumPy (CPU) | 3.1 ms | — |
+| Naive `atomicAdd` | 85 ms | 0.04× |
+| Tree reduction | 0.50 ms | 170× |
+| Warp shuffle | 0.31 ms | 274× |
+| cuBLAS `cublasSasum` | 0.18 ms | 472× |
+
+*Full timing code and verification against NumPy in the companion notebook.*
+
+---
+
+## What this means for real ML code
+
+**You don't write these by hand most of the time** — PyTorch's `torch.sum`, cuBLAS, and Thrust already implement warp-shuffle reductions internally. But two things are worth keeping in mind:
+
+**1. Fused kernels matter.** If you reduce inside a larger kernel (e.g., computing per-row softmax), you control whether the reduction is tree or atomic. An atomic inside a fused kernel reintroduces the serialisation problem.
+
+**2. Atomic accumulation in custom kernels is a trap.** Writing a custom loss function or metric in CUDA and reaching for `atomicAdd` as the final step is the #1 cause of custom kernels being slower than their PyTorch equivalent. The tree/warp approach eliminates the bottleneck.
+
+**3. For very large N**, one kernel pass isn't enough — you recurse. At N = 2²⁸ the partial-sum array from a single pass is still 2²⁰ elements. Standard practice: two kernel launches, or use CUB's `DeviceReduce` which handles this automatically.
+
+<NotebookCallout
+  slug="cuda-parallel-reduction"
+  title="Run the benchmarks yourself"
+  description="Numba CUDA kernels for all three approaches, with timing loops and NumPy verification. Colab free tier (T4) works fine."
+/>

@@ -1,0 +1,38 @@
+---
+interface Props {
+  slug: string;
+  title?: string;
+  description?: string;
+}
+
+const {
+  slug,
+  title       = 'Companion notebook',
+  description = 'Runnable implementations and benchmarks',
+} = Astro.props;
+
+const repo     = 'is_h/is_h.github.io';
+const branch   = 'main';
+const viewerUrl = `/notebooks/jupyter/${slug}`;
+const colabUrl  = `https://colab.research.google.com/github/${repo}/blob/${branch}/src/content/jupyter/${slug}.ipynb`;
+---
+
+<div class="not-prose my-7 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-500/25 bg-violet-500/[0.04] px-5 py-4">
+  <div>
+    <p class="text-sm font-semibold text-zinc-200 mb-0.5">{title}</p>
+    <p class="text-xs text-zinc-500">{description}</p>
+  </div>
+  <div class="flex items-center gap-4 shrink-0">
+    <a href={viewerUrl}
+       class="font-mono text-xs text-violet-400 hover:text-violet-300 transition-colors">
+      View notebook →
+    </a>
+    <a href={colabUrl} target="_blank" rel="noopener"
+       class="flex items-center gap-1.5 font-mono text-xs text-orange-400 hover:text-orange-300 transition-colors">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="11" height="11">
+        <path d="M16.9 4.8C14.9 2.8 12.4 1.8 9.7 1.8 4.5 1.8.2 6.1.2 11.3c0 2.8 1.2 5.4 3.1 7.2L16.9 4.8zm-1.4 14.4C13.6 21.1 11.7 22 9.7 22c-5.1 0-9.5-4.3-9.5-9.5 0-1.9.6-3.8 1.6-5.3l13.7 12zm8.3-7.9c0 2.8-1.2 5.4-3.1 7.2L7.1 4.8C9.1 2.8 11.6 1.8 14.3 1.8c5.2 0 9.5 4.3 9.5 9.5z"/>
+      </svg>
+      Open in Colab
+    </a>
+  </div>
+</div>
