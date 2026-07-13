@@ -28,6 +28,34 @@ const lines = code.trim().split('\n').length;
 </div>
 
 <script>
+  // Packages bundled in Pyodide that need an explicit loadPackage() call
+  const PYODIDE_PKGS: Record<string, string> = {
+    numpy:       'numpy',
+    pandas:      'pandas',
+    matplotlib:  'matplotlib',
+    scipy:       'scipy',
+    sklearn:     'scikit-learn',
+    seaborn:     'seaborn',
+    statsmodels: 'statsmodels',
+    sympy:       'sympy',
+    networkx:    'networkx',
+    PIL:         'pillow',
+    cv2:         'opencv-python',
+    bokeh:       'bokeh',
+    plotly:      'plotly',
+  };
+
+  function detectPackages(code: string): string[] {
+    const found = new Set<string>();
+    const re = /^(?:import|from)\s+([a-zA-Z_][a-zA-Z0-9_]*)/gm;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(code)) !== null) {
+      const pkg = PYODIDE_PKGS[m[1]];
+      if (pkg) found.add(pkg);
+    }
+    return [...found];
+  }
+
   // Shared Pyodide instance across all cells on the page
   let _py: any = null;
   let _pyLoading: Promise<any> | null = null;
@@ -45,7 +73,6 @@ const lines = code.trim().split('\n').length;
         document.head.appendChild(s);
       });
       const py = await (window as any).loadPyodide();
-      // Bootstrap stdout/stderr capture
       py.runPython(`
 import sys, io
 class _Cap:
@@ -72,19 +99,30 @@ sys.stderr = _cap
 
     btn.addEventListener('click', async () => {
       btn.disabled = true;
-      status.textContent = 'loading runtime…';
       out.classList.remove('hidden', 'text-red-400', 'text-zinc-400');
       out.classList.add('text-zinc-500');
       out.textContent = '';
 
       try {
+        const code = area.value;
+
+        status.textContent = 'loading runtime…';
         const py = await getPyodide();
+
+        // Load any scientific packages the cell imports
+        const pkgs = detectPackages(code);
+        if (pkgs.length > 0) {
+          status.textContent = `loading ${pkgs.join(', ')}…`;
+          await py.loadPackage(pkgs);
+        }
+
+        // Discard any output produced during package loading, then run user code
+        py.runPython('_cap.getvalue()');
         status.textContent = 'running…';
 
         try {
-          await py.runPythonAsync(area.value);
+          await py.runPythonAsync(code);
         } catch (e: any) {
-          // Python exception — still capture any stdout before the error
           py.runPython(`_cap.write(${JSON.stringify('\n' + String(e.message))})`);
         }
 
