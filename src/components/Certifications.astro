@@ -1,0 +1,31 @@
+---
+import { site } from '../data/site';
+---
+
+{site.certifications.length > 0 && (
+  <section id="certifications" class="scroll-mt-24 reveal">
+    <h2 class="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-600 mb-5">Certifications</h2>
+    <div class="space-y-3">
+      {site.certifications.map(cert => (
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            {cert.url ? (
+              <a
+                href={cert.url}
+                target="_blank"
+                rel="noopener"
+                class="text-sm font-medium text-zinc-100 hover:text-violet-400 transition-colors"
+              >
+                {cert.name}
+              </a>
+            ) : (
+              <p class="text-sm font-medium text-zinc-100">{cert.name}</p>
+            )}
+            <p class="text-xs text-zinc-500 mt-0.5">{cert.issuer}</p>
+          </div>
+          <p class="font-mono text-[11px] text-zinc-600 shrink-0 mt-0.5">{cert.date}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+)}

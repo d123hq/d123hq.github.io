@@ -106,6 +106,28 @@ export const site = {
     },
   ],
 
+  // ── Certifications ────────────────────────────────────────────
+  certifications: [
+    {
+      name:   'AWS Certified Machine Learning – Specialty',
+      issuer: 'Amazon Web Services',
+      date:   '2024',
+      url:    '',   // add Credly / credential URL when ready
+    },
+    {
+      name:   'TensorFlow Developer Certificate',
+      issuer: 'Google',
+      date:   '2023',
+      url:    '',
+    },
+    {
+      name:   'Deep Learning Specialization',
+      issuer: 'DeepLearning.AI / Coursera',
+      date:   '2023',
+      url:    '',
+    },
+  ],
+
   // ── Contact ───────────────────────────────────────────────────
   contactText: 'Open to new opportunities in data science, ML engineering, and applied AI. If you have a role, a project, or just want to talk about data — reach out.',
 
