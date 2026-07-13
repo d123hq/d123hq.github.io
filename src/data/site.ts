@@ -5,41 +5,41 @@
 export const site = {
 
   // ── Identity ──────────────────────────────────────────────────
-  name:      'Your Name',
-  role:      'Data Scientist & ML Engineer',
-  available: true,   // set false to hide "Available for hire" badge
+  name:      'Henry Isaac',
+  role:      'Senior AI Engineer & ML Educator',
+  available: false,
 
   typingPhrases: [
+    'AI Engineer',
+    'ML Educator',
     'Data Scientist',
-    'ML Engineer',
-    'NLP Practitioner',
-    'MLOps Engineer',
+    'GenAI Practitioner',
   ],
 
-  tagline: 'I build machine learning systems that convert raw data into reliable decisions — from exploration to production.',
+  tagline: 'I build and teach machine learning systems — from production ML pipelines and GenAI applications to data science education at scale.',
 
   // ── Social links (leave blank to hide) ────────────────────────
-  // Add your handles when ready — any blank field is hidden automatically
   social: {
     github:   'https://github.com/isac-h',
-    linkedin: '',    // e.g. 'https://linkedin.com/in/yourhandle'
-    x:        '',    // e.g. 'https://x.com/yourhandle'
-    email:    '',    // e.g. 'you@example.com'
+    linkedin: 'https://linkedin.com/in/henryisaac',
+    x:        '',
+    email:    'henryisaac617@gmail.com',
     kaggle:   '',
   },
 
   // ── About ─────────────────────────────────────────────────────
   bio: [
-    'Brief introduction — who you are, your background, and how you got into data science / ML.',
-    'What problems you find most interesting and how you approach them.',
-    'What you are currently looking for: role type, industry, or the kind of team you want to join.',
+    'AI Engineer and educator based in Bengaluru with 6+ years building at the intersection of machine learning, data science, and technical education.',
+    'Currently at Great Learning designing and delivering AI programmes. Previously at upGrad as a Data Scientist and later as Assistant Manager leading the DS, ML, and GenAI curriculum portfolio.',
+    'Interested in applied GenAI, retrieval-augmented generation, and making complex ML concepts accessible — through writing, notebooks, and hands-on projects.',
   ],
 
   // ── Skills ────────────────────────────────────────────────────
   skills: [
     { label: 'Languages',          items: ['Python', 'SQL', 'R', 'Bash'] },
     { label: 'ML / Deep Learning', items: ['PyTorch', 'TensorFlow', 'scikit-learn', 'HuggingFace', 'XGBoost', 'LightGBM'] },
-    { label: 'Data & Analytics',   items: ['Pandas', 'NumPy', 'Polars', 'Spark', 'dbt', 'Airflow'] },
+    { label: 'GenAI & NLP',        items: ['LangChain', 'RAG', 'OpenAI API', 'FAISS', 'Prompt Engineering'] },
+    { label: 'Data & Analytics',   items: ['Pandas', 'NumPy', 'Spark', 'Marketing Mix Modeling', 'Data Visualization'] },
     { label: 'MLOps & Cloud',      items: ['Docker', 'MLflow', 'FastAPI', 'AWS', 'Git', 'GitHub Actions'] },
   ],
 
@@ -71,24 +71,43 @@ export const site = {
   // ── Experience ────────────────────────────────────────────────
   experience: [
     {
-      role:     'Data Scientist',
-      company:  'Company Name',
-      period:   'Jan 2024 – Present',
-      location: 'City, Country',
+      role:     'Senior AI Engineer',
+      company:  'Great Learning',
+      period:   'Apr 2025 – Present',
+      location: 'Bengaluru, India',
       bullets: [
-        'What you worked on and the impact it had.',
-        'Key contribution or achievement with a concrete metric.',
-        'Tools, techniques, or scale worth highlighting.',
+        'Design and deliver advanced AI and ML programmes for working professionals.',
+        'Build hands-on curriculum covering LLMs, GenAI, and production ML systems.',
       ],
     },
     {
-      role:     'ML Engineer Intern',
-      company:  'Company / Lab',
-      period:   'Jun 2023 – Dec 2023',
-      location: 'Remote',
+      role:     'Assistant Manager – Data Science & Machine Learning',
+      company:  'upGrad',
+      period:   'May 2024 – Apr 2025',
+      location: 'Bengaluru, India',
       bullets: [
-        'What you built or contributed to.',
-        'Outcome, metric, or learning.',
+        'Led development of DS, ML, and GenAI programmes across the upGrad platform.',
+        'Oversaw curriculum design for retrieval-augmented generation, data visualisation, and applied ML tracks.',
+      ],
+    },
+    {
+      role:     'Data Scientist',
+      company:  'upGrad',
+      period:   'Mar 2022 – May 2024',
+      location: 'Bengaluru, India',
+      bullets: [
+        'Built and maintained data science models including marketing mix modelling and forecasting pipelines.',
+        'Delivered data visualisation frameworks and analytics tooling used across product teams.',
+      ],
+    },
+    {
+      role:     'Senior Associate',
+      company:  'BYJU\'S',
+      period:   'Jul 2019 – Feb 2022',
+      location: 'Bengaluru, India',
+      bullets: [
+        'Led instructional design and curriculum development for STEM and technology courses.',
+        'Produced structured learning content at scale for one of India\'s largest edtech platforms.',
       ],
     },
   ],
@@ -96,37 +115,26 @@ export const site = {
   // ── Education ─────────────────────────────────────────────────
   education: [
     {
-      degree: 'BSc / MSc Computer Science',
-      school: 'Your University',
-      period: '2019 – 2023',
+      degree: 'Postgraduate Degree, Machine Learning & AI',
+      school: 'International Institute of Information Technology Bangalore',
+      period: '',
       notes: [
-        'Dissertation: brief topic and result.',
-        'Relevant modules: Statistical ML, NLP, Data Engineering.',
+        'Specialisation in applied ML, deep learning, and communication analytics.',
+      ],
+    },
+    {
+      degree: 'MTech, Biomedical Engineering',
+      school: 'Motilal Nehru National Institute of Technology',
+      period: '',
+      notes: [
+        'Research focus on signal processing and data analytics for biomedical systems.',
       ],
     },
   ],
 
   // ── Certifications ────────────────────────────────────────────
-  certifications: [
-    {
-      name:   'AWS Certified Machine Learning – Specialty',
-      issuer: 'Amazon Web Services',
-      date:   '2024',
-      url:    '',   // add Credly / credential URL when ready
-    },
-    {
-      name:   'TensorFlow Developer Certificate',
-      issuer: 'Google',
-      date:   '2023',
-      url:    '',
-    },
-    {
-      name:   'Deep Learning Specialization',
-      issuer: 'DeepLearning.AI / Coursera',
-      date:   '2023',
-      url:    '',
-    },
-  ],
+  // Add your certifications here — leave url blank until you have the credential link
+  certifications: [] as Array<{ name: string; issuer: string; date: string; url: string }>,
 
   // ── Contact ───────────────────────────────────────────────────
   contactText: 'Open to new opportunities in data science, ML engineering, and applied AI. If you have a role, a project, or just want to talk about data — reach out.',
