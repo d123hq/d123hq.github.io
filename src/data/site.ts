@@ -134,10 +134,9 @@ export const site = {
   // ── Notebooks source ──────────────────────────────────────────
   // .ipynb files are fetched from this GitHub repo at build time.
   // Point 'repo' at a dedicated notebooks repo if you prefer separation.
-  // Update owner/repo after GitHub username rename
   notebooksRepo: {
-    owner:  'd123hq',
-    repo:   'd123hq.github.io',
+    owner:  'is_h',
+    repo:   'is_h.github.io',
     branch: 'main',
     path:   'src/content/jupyter',
   },
