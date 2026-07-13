@@ -109,6 +109,11 @@ export const site = {
   // ── Contact ───────────────────────────────────────────────────
   contactText: 'Open to new opportunities in data science, ML engineering, and applied AI. If you have a role, a project, or just want to talk about data — reach out.',
 
+  // ── Marimo notebooks ──────────────────────────────────────────
+  // Export with: marimo export html-wasm notebook.py -o public/notebooks/name.html
+  // Then add an entry here. Leave the array empty to hide this section.
+  marimoNotebooks: [] as Array<{ title: string; desc: string; href: string; date?: string }>,
+
 };
 
 export type SiteConfig = typeof site;

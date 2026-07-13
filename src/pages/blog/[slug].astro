@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
+import PyCell from '../../components/PyCell.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -15,5 +16,5 @@ const { Content } = await post.render();
 ---
 
 <BlogPost post={post}>
-  <Content />
+  <Content components={{ PyCell }} />
 </BlogPost>

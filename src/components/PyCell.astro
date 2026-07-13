@@ -1,0 +1,105 @@
+---
+interface Props {
+  code: string;
+  lang?: string;
+}
+const { code = '', lang = 'python' } = Astro.props;
+const lines = code.trim().split('\n').length;
+---
+
+<div class="py-cell my-6 rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden not-prose">
+  <div class="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-900/80">
+    <span class="font-mono text-[10px] text-zinc-600 uppercase tracking-widest">{lang}</span>
+    <div class="flex items-center gap-3">
+      <span class="status-text font-mono text-[10px] text-zinc-600"></span>
+      <button class="run-btn font-mono text-xs text-violet-400 hover:text-violet-300 transition-colors disabled:opacity-40">
+        ▶ Run
+      </button>
+    </div>
+  </div>
+  <textarea
+    class="code-input block w-full bg-transparent font-mono text-[13px] text-zinc-200 p-4 focus:outline-none resize-y leading-relaxed"
+    rows={Math.max(lines, 2)}
+    spellcheck="false"
+    autocorrect="off"
+    autocapitalize="off"
+  >{code.trim()}</textarea>
+  <div class="output hidden border-t border-zinc-800 px-4 py-3 font-mono text-[13px] whitespace-pre-wrap leading-relaxed"></div>
+</div>
+
+<script>
+  // Shared Pyodide instance across all cells on the page
+  let _py: any = null;
+  let _pyLoading: Promise<any> | null = null;
+
+  async function getPyodide() {
+    if (_py) return _py;
+    if (_pyLoading) return _pyLoading;
+
+    _pyLoading = (async () => {
+      await new Promise<void>((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js';
+        s.onload = () => resolve();
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      const py = await (window as any).loadPyodide();
+      // Bootstrap stdout/stderr capture
+      py.runPython(`
+import sys, io
+class _Cap:
+    def __init__(self): self.buf = io.StringIO()
+    def write(self, s): self.buf.write(s)
+    def flush(self): pass
+    def getvalue(self): v = self.buf.getvalue(); self.buf = io.StringIO(); return v
+_cap = _Cap()
+sys.stdout = _cap
+sys.stderr = _cap
+`);
+      _py = py;
+      return py;
+    })();
+
+    return _pyLoading;
+  }
+
+  document.querySelectorAll<HTMLElement>('.py-cell').forEach(cell => {
+    const btn    = cell.querySelector<HTMLButtonElement>('.run-btn')!;
+    const area   = cell.querySelector<HTMLTextAreaElement>('.code-input')!;
+    const out    = cell.querySelector<HTMLElement>('.output')!;
+    const status = cell.querySelector<HTMLElement>('.status-text')!;
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      status.textContent = 'loading runtime…';
+      out.classList.remove('hidden', 'text-red-400', 'text-zinc-400');
+      out.classList.add('text-zinc-500');
+      out.textContent = '';
+
+      try {
+        const py = await getPyodide();
+        status.textContent = 'running…';
+
+        try {
+          await py.runPythonAsync(area.value);
+        } catch (e: any) {
+          // Python exception — still capture any stdout before the error
+          py.runPython(`_cap.write(${JSON.stringify('\n' + String(e.message))})`);
+        }
+
+        const text: string = py.runPython('_cap.getvalue()');
+        out.textContent = text || '(no output)';
+        out.classList.toggle('text-red-400', text.includes('Traceback') || text.includes('Error'));
+        out.classList.toggle('text-zinc-400', !text.includes('Traceback') && !text.includes('Error'));
+      } catch (e: any) {
+        out.textContent = `Failed to load Pyodide: ${e.message}`;
+        out.classList.add('text-red-400');
+      } finally {
+        out.classList.remove('hidden');
+        status.textContent = '';
+        btn.disabled = false;
+      }
+    });
+  });
+</script>

@@ -12,7 +12,10 @@ const sorted = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime(
   <header class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800/50">
     <div class="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
       <span class="font-mono text-sm text-white font-medium">{site.name}</span>
-      <a href="/about" class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">About →</a>
+      <nav class="flex items-center gap-4">
+        <a href="/notebooks" class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">Notebooks</a>
+        <a href="/about" class="text-xs text-zinc-500 hover:text-zinc-200 transition-colors">About →</a>
+      </nav>
     </div>
   </header>
 

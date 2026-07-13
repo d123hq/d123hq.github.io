@@ -1,0 +1,66 @@
+---
+title: "Python in the Browser: Live Code with Pyodide"
+description: "How WebAssembly lets you run real Python — NumPy, Pandas, and all — directly in a browser tab, with no server involved."
+date: 2026-07-13
+tags: ["Python", "WebAssembly", "Pyodide", "interactive"]
+draft: false
+---
+
+The cells below run real Python — click **▶ Run** to execute them. Pyodide (CPython compiled to WebAssembly) loads on first run (~10 MB, cached after). No server, no kernel, no login.
+
+## Basic output
+
+<PyCell code={`msg = "Hello from Python " + "3.11"
+for i in range(5):
+    print(f"{i}: {msg}")`} />
+
+## NumPy is available
+
+Pyodide ships with NumPy, Pandas, Matplotlib, and a growing list of scientific packages.
+
+<PyCell code={`import numpy as np
+
+x = np.linspace(0, 2 * np.pi, 8)
+y = np.round(np.sin(x), 3)
+
+for xi, yi in zip(x, y):
+    bar = "█" * int((yi + 1) * 10)
+    print(f"{xi:5.2f}  {yi:+.3f}  {bar}")`} />
+
+## Pandas
+
+<PyCell code={`import pandas as pd
+import numpy as np
+
+np.random.seed(0)
+df = pd.DataFrame({
+    "model":    ["Linear", "Ridge", "Lasso", "ElasticNet", "GBM"],
+    "rmse":     np.round(np.random.uniform(18, 35, 5), 2),
+    "r2":       np.round(np.random.uniform(0.72, 0.94, 5), 3),
+    "fit_time": np.round(np.random.uniform(0.1, 4.5, 5), 2),
+})
+df = df.sort_values("rmse").reset_index(drop=True)
+print(df.to_string(index=False))`} />
+
+## Editable cells
+
+All cells are editable — change the code and run again. Each cell shares the same Python runtime, so variables from earlier cells are available in later ones.
+
+<PyCell code={`# This picks up 'df' defined in the Pandas cell above
+best = df.iloc[0]
+print(f"Best model: {best['model']}")
+print(f"  RMSE:     {best['rmse']}")
+print(f"  R²:       {best['r2']}")`} />
+
+## How it works
+
+The [Pyodide](https://pyodide.org) project compiles CPython to WebAssembly, which all modern browsers can execute natively at near-native speed. The runtime is loaded once from a CDN and then cached by the browser — subsequent page loads are instant.
+
+Limitations to be aware of:
+
+- **No filesystem access** — `open()` works only with in-memory virtual files
+- **No subprocess** — can't shell out or spawn processes  
+- **Blocking I/O** — network calls require `asyncio` and Pyodide's `pyfetch`
+- **Package installs** — run `await micropip.install("package")` for pure-Python wheels
+
+For notebooks with richer output (plots, dataframes, full interactivity), see the [Jupyter notebooks](/notebooks) section or open in Colab.
